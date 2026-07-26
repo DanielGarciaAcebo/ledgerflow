@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# IDEs
+.idea/
+.vscode/
+
+# Temporary editor files
+*.swp
+*.swo
+
+# Local LedgerFlow data
+classification.txt
+group.txt
+
+# Excel and CSV files
+*.xlsx
+*.xls
+*.csv
+
+# Logs and temporary files
+*.log
+*.tmp
+~$*
+
+# Operating system files
+.DS_Store
+Thumbs.db
