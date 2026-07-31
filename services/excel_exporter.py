@@ -6,9 +6,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
 
-from classificationController.automatic_classifier import parse_amount
-from transactionController.transaction_controller import Transaction
-
+from models.transaction import Transaction
+from services.automatic_classifier import parse_amount
 
 def export_transactions_to_excel(
     parent: tk.Misc,

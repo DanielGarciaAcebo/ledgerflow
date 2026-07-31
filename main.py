@@ -1,27 +1,23 @@
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
 
-from pathlib import Path
-from classificationController.classification_window import open_classification_window
-from columnController.column_controller import (
+from controllers.columns import (
     configure_column_selectors,
     get_selected_columns,
 )
-from appController.file_initializer import (
-    ensure_required_files,
-)
-from exportController.excel_exporter import export_transactions_to_excel
-from groupController.group_controller import (
+from controllers.groups import (
     create_group,
     delete_group,
     load_groups,
 )
-from selectController.select_controller import select_excel_file
-from tableController.table_controller import show_excel_data
-from transactionController.transaction_controller import (
-    Transaction,
-    build_transactions,
-)
+from controllers.selection import select_excel_file
+from controllers.table import show_excel_data
+from controllers.transactions import build_transactions
+from models.transaction import Transaction
+from services.excel_exporter import export_transactions_to_excel
+from services.file_initializer import ensure_required_files
+from ui.classification_window import open_classification_window
 
 
 
@@ -354,18 +350,6 @@ def main() -> None:
             groups,
         )
 
-    prepare_button = ttk.Button(
-        column_selection_frame,
-        text="Start Classification",
-        command=prepare_transactions,
-    )
-
-    prepare_button.grid(
-        row=2,
-        column=0,
-        columnspan=2,
-        pady=(15, 0),
-    )
 
     select_button = ttk.Button(
         excel_options_frame,
@@ -374,16 +358,24 @@ def main() -> None:
     )
     select_button.pack(side="left")
 
-    prepare_button = ttk.Button(
+    actions_frame = ttk.Frame(
         column_selection_frame,
-        text="Start Classification",
-        command=prepare_transactions,
     )
-    prepare_button.grid(
+    actions_frame.grid(
         row=2,
         column=0,
         columnspan=2,
         pady=(15, 0),
+    )
+
+    prepare_button = ttk.Button(
+        actions_frame,
+        text="Start Classification",
+        command=prepare_transactions,
+    )
+    prepare_button.pack(
+        side="left",
+        padx=(0, 5),
     )
 
     export_button = ttk.Button(

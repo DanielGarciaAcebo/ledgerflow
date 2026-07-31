@@ -1,9 +1,5 @@
-from classificationController.automatic_classifier import parse_amount
-from appController.file_initializer import (
-    CLASSIFICATIONS_FILE,
-)
-
-
+from services.automatic_classifier import parse_amount
+from services.file_initializer import CLASSIFICATIONS_FILE
 
 FIELD_SEPARATOR = "\t"
 GROUP_SEPARATOR = " | "

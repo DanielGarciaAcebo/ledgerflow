@@ -3,15 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environment
+# Virtual environments
 .venv/
 venv/
 env/
 
-# PyInstaller
+# PyInstaller output
 build/
 dist/
-*.spec
 
 # IDEs
 .idea/
@@ -24,8 +23,9 @@ dist/
 # Local LedgerFlow data
 classification.txt
 group.txt
+configuration.json
 
-# Excel and CSV files
+# Financial files
 *.xlsx
 *.xls
 *.csv
@@ -38,29 +38,3 @@ group.txt
 # Operating system files
 .DS_Store
 Thumbs.db
-
-# Python cache
-__pycache__/
-*.py[cod]
-
-# Virtual environments
-.venv/
-venv/
-
-# PyInstaller output
-build/
-dist/
-
-# Local LedgerFlow data
-group.txt
-classification.txt
-configuration.json
-
-# Financial files
-*.xlsx
-*.xls
-*.csv
-
-# IDEs
-.idea/
-.vscode/

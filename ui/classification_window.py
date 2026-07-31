@@ -1,10 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from classificationController.classification_repository import (
-    save_classification,
-)
-from transactionController.transaction_controller import Transaction
+from models.transaction import Transaction
+from services.classification_repository import save_classification
 
 
 def open_classification_window(

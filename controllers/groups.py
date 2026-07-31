@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from appController.file_initializer import GROUPS_FILE
+from services.file_initializer import GROUPS_FILE
 
 def load_groups() -> list[str]:
     if not GROUPS_FILE.exists():
