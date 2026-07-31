@@ -1,11 +1,9 @@
-from pathlib import Path
-
 from classificationController.automatic_classifier import parse_amount
-
-
-CLASSIFICATIONS_FILE = (
-    Path(__file__).resolve().parent.parent / "classification.txt"
+from appController.file_initializer import (
+    CLASSIFICATIONS_FILE,
 )
+
+
 
 FIELD_SEPARATOR = "\t"
 GROUP_SEPARATOR = " | "

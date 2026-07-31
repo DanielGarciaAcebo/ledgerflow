@@ -38,3 +38,29 @@ group.txt
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# PyInstaller output
+build/
+dist/
+
+# Local LedgerFlow data
+group.txt
+classification.txt
+configuration.json
+
+# Financial files
+*.xlsx
+*.xls
+*.csv
+
+# IDEs
+.idea/
+.vscode/

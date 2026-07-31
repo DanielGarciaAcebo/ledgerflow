@@ -1,10 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
 
+from pathlib import Path
 from classificationController.classification_window import open_classification_window
 from columnController.column_controller import (
     configure_column_selectors,
     get_selected_columns,
+)
+from appController.file_initializer import (
+    ensure_required_files,
 )
 from exportController.excel_exporter import export_transactions_to_excel
 from groupController.group_controller import (
@@ -20,6 +24,7 @@ from transactionController.transaction_controller import (
 )
 
 
+
 APP_TITLE = "LedgerFlow"
 
 
@@ -27,11 +32,22 @@ def main() -> None:
     # =========================================================
     # MAIN WINDOW
     # =========================================================
+    ensure_required_files()
 
     root = tk.Tk()
     root.title(APP_TITLE)
     root.geometry("1050x900")
     root.minsize(850, 700)
+
+    icon_path = (
+        Path(__file__).resolve().parent
+        / "assets"
+        / "ledgerflow.png"
+    )
+
+    if icon_path.exists():
+        app_icon = tk.PhotoImage(file=icon_path)
+        root.iconphoto(True, app_icon)
 
     container = ttk.Frame(
         root,

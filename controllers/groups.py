@@ -1,10 +1,7 @@
 import tkinter as tk
-from pathlib import Path
 from tkinter import messagebox
 
-
-GROUPS_FILE = Path(__file__).resolve().parent.parent / "group.txt"
-
+from appController.file_initializer import GROUPS_FILE
 
 def load_groups() -> list[str]:
     if not GROUPS_FILE.exists():

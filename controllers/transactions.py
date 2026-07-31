@@ -1,24 +1,10 @@
-from dataclasses import dataclass, field
-
-from classificationController.automatic_classifier import (
-    get_automatic_groups,
-)
-from classificationController.classification_repository import (
+from models.transaction import Transaction
+from services.automatic_classifier import get_automatic_groups
+from services.classification_repository import (
     get_saved_group_assignments,
 )
-from normalizationController.name_normalizer import (
-    normalize_transaction_name,
-)
+from services.name_normalizer import normalize_transaction_name
 
-
-
-@dataclass(slots=True)
-class Transaction:
-    name: str
-    amount: object
-    group_assignments: dict[str, bool] = field(
-        default_factory=dict
-    )
 
 def build_transactions(
     headers: list[str],
@@ -29,7 +15,6 @@ def build_transactions(
     try:
         name_index = headers.index(name_column)
         amount_index = headers.index(amount_column)
-
     except ValueError as error:
         raise ValueError(
             "The selected columns were not found in the Excel file."
@@ -75,12 +60,12 @@ def build_transactions(
             **saved_assignments,
         }
 
-        transaction = Transaction(
-            name=normalized_name,
-            amount=amount_value,
-            group_assignments=combined_assignments,
+        transactions.append(
+            Transaction(
+                name=normalized_name,
+                amount=amount_value,
+                group_assignments=combined_assignments,
+            )
         )
-
-        transactions.append(transaction)
 
     return transactions
