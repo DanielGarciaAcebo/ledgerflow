@@ -1,40 +1,69 @@
-# Python
-__pycache__/
+# Python bytecode and caches
+
+**pycache**/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Python packaging
+
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
 
 # Virtual environments
+
 .venv/
 venv/
 env/
 
 # PyInstaller output
+
 build/
 dist/
 
+# Generated release packages
+
+release/
+*.AppImage
+*.pkg.tar.zst
+
 # IDEs
+
 .idea/
 .vscode/
 
 # Temporary editor files
+
 *.swp
 *.swo
+*~
 
-# Local LedgerFlow data
-classification.txt
-group.txt
-configuration.json
+# Legacy local LedgerFlow data
+
+/classification.txt
+/group.txt
+/configuration.json
 
 # Financial files
+
 *.xlsx
 *.xls
 *.csv
+*.ods
 
 # Logs and temporary files
+
 *.log
 *.tmp
 ~$*
 
 # Operating system files
+
 .DS_Store
 Thumbs.db

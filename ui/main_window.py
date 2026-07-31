@@ -49,6 +49,7 @@ class LedgerFlowApp(tk.Tk):
         self.groups = load_groups()
 
         self._app_icon: tk.PhotoImage | None = None
+        self._header_icon: tk.PhotoImage | None = None
 
         self._configure_window()
         self._create_layout()
@@ -69,15 +70,27 @@ class LedgerFlowApp(tk.Tk):
             / "ledgerflow.png"
         )
 
-        if icon_path.exists():
-            self._app_icon = tk.PhotoImage(
-                file=icon_path,
-            )
+        if not icon_path.exists():
+            return
 
-            self.iconphoto(
-                True,
-                self._app_icon,
-            )
+        self._app_icon = tk.PhotoImage(
+            file=icon_path,
+        )
+
+        self.iconphoto(
+            True,
+            self._app_icon,
+        )
+
+        resize_factor = max(
+            1,
+            self._app_icon.width() // 64,
+        )
+
+        self._header_icon = self._app_icon.subsample(
+            resize_factor,
+            resize_factor,
+        )
 
     # =========================================================
     # MAIN LAYOUT
@@ -105,22 +118,71 @@ class LedgerFlowApp(tk.Tk):
     # =========================================================
 
     def _create_header(self) -> None:
-        title_label = ttk.Label(
+        header_frame = ttk.Frame(
             self.container,
+        )
+        header_frame.pack(
+            fill="x",
+            pady=(0, 25),
+        )
+
+        icon_container = ttk.Frame(
+            header_frame,
+            width=80,
+        )
+        icon_container.pack(
+            side="left",
+            fill="y",
+        )
+        icon_container.pack_propagate(False)
+
+        if self._header_icon is not None:
+            icon_label = ttk.Label(
+                icon_container,
+                image=self._header_icon,
+            )
+            icon_label.pack(
+                anchor="nw",
+            )
+
+        text_container = ttk.Frame(
+            header_frame,
+        )
+        text_container.pack(
+            side="left",
+            fill="x",
+            expand=True,
+        )
+
+        title_label = ttk.Label(
+            text_container,
             text=APP_TITLE,
             font=("Sans", 22, "bold"),
+            anchor="center",
         )
         title_label.pack(
+            fill="x",
             pady=(0, 8),
         )
 
         description_label = ttk.Label(
-            self.container,
+            text_container,
             text="Financial Excel Organizer",
+            anchor="center",
         )
         description_label.pack(
-            pady=(0, 25),
+            fill="x",
         )
+
+        right_spacer = ttk.Frame(
+            header_frame,
+            width=80,
+        )
+        right_spacer.pack(
+            side="right",
+            fill="y",
+        )
+        right_spacer.pack_propagate(False)
 
     # =========================================================
     # EXCEL OPTIONS
