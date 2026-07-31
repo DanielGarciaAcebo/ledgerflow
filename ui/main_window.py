@@ -3,9 +3,13 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from controllers.columns import (
-    configure_column_selectors,
-    get_selected_columns,
+    ColumnNotFoundError,
+    MissingAmountColumnError,
+    MissingNameColumnError,
+    SameColumnSelectionError,
+    validate_column_selection,
 )
+
 from controllers.groups import (
     GroupAlreadyExistsError,
     GroupNotFoundError,
@@ -44,6 +48,23 @@ class LedgerFlowApp(tk.Tk):
         self._configure_window()
         self._create_layout()
         self._bind_events()
+
+    def _configure_column_selectors(
+        self,
+        headers: list[str],
+    ) -> None:
+        self.name_column_selector["values"] = headers
+        self.amount_column_selector["values"] = headers
+
+        self.name_column_selector.config(
+            state="readonly",
+        )
+        self.amount_column_selector.config(
+            state="readonly",
+        )
+
+        self.name_column_var.set("")
+        self.amount_column_var.set("")
 
     def _configure_window(self) -> None:
         self.title(APP_TITLE)
@@ -418,12 +439,8 @@ class LedgerFlowApp(tk.Tk):
             rows,
         )
 
-        configure_column_selectors(
+        self._configure_column_selectors(
             headers,
-            self.name_column_selector,
-            self.amount_column_selector,
-            self.name_column_var,
-            self.amount_column_var,
         )
 
         self.prepare_button.config(
@@ -435,15 +452,42 @@ class LedgerFlowApp(tk.Tk):
         )
 
     def _prepare_transactions(self) -> None:
-        selected_columns = get_selected_columns(
-            self.name_column_var,
-            self.amount_column_var,
-        )
-
-        if selected_columns is None:
+        try:
+            name_column, amount_column = (
+                validate_column_selection(
+                    self.name_column_var.get(),
+                    self.amount_column_var.get(),
+                    self.loaded_headers,
+                )
+            )
+        except MissingNameColumnError as error:
+            messagebox.showwarning(
+                title="Missing Name Column",
+                message=str(error),
+                parent=self,
+            )
             return
-
-        name_column, amount_column = selected_columns
+        except MissingAmountColumnError as error:
+            messagebox.showwarning(
+                title="Missing Amount Column",
+                message=str(error),
+                parent=self,
+            )
+            return
+        except SameColumnSelectionError as error:
+            messagebox.showwarning(
+                title="Invalid Column Selection",
+                message=str(error),
+                parent=self,
+            )
+            return
+        except ColumnNotFoundError as error:
+            messagebox.showerror(
+                title="Column Not Found",
+                message=str(error),
+                parent=self,
+            )
+            return
 
         self.transactions = build_transactions(
             self.loaded_headers,

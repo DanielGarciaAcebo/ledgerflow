@@ -1,50 +1,54 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
+class ColumnSelectionError(ValueError):
+    """Base exception for column selection errors."""
 
 
-def configure_column_selectors(
-    headers: list[str],
-    name_selector: ttk.Combobox,
-    amount_selector: ttk.Combobox,
-    name_var: tk.StringVar,
-    amount_var: tk.StringVar,
-) -> None:
-    name_selector["values"] = headers
-    amount_selector["values"] = headers
-
-    name_selector.config(state="readonly")
-    amount_selector.config(state="readonly")
-
-    name_var.set("")
-    amount_var.set("")
+class MissingNameColumnError(ColumnSelectionError):
+    """Raised when the name column is not selected."""
 
 
-def get_selected_columns(
-    name_var: tk.StringVar,
-    amount_var: tk.StringVar,
-) -> tuple[str, str] | None:
-    name_column = name_var.get().strip()
-    amount_column = amount_var.get().strip()
+class MissingAmountColumnError(ColumnSelectionError):
+    """Raised when the amount column is not selected."""
 
-    if not name_column:
-        messagebox.showwarning(
-            title="Missing Name Column",
-            message="Select the column containing the transaction name.",
+
+class SameColumnSelectionError(ColumnSelectionError):
+    """Raised when both selections reference the same column."""
+
+
+class ColumnNotFoundError(ColumnSelectionError):
+    """Raised when a selected column is not available."""
+
+
+def validate_column_selection(
+    name_column: str,
+    amount_column: str,
+    available_headers: list[str],
+) -> tuple[str, str]:
+    clean_name_column = name_column.strip()
+    clean_amount_column = amount_column.strip()
+
+    if not clean_name_column:
+        raise MissingNameColumnError(
+            "Select the column containing the transaction name."
         )
-        return None
 
-    if not amount_column:
-        messagebox.showwarning(
-            title="Missing Amount Column",
-            message="Select the column containing the transaction amount.",
+    if not clean_amount_column:
+        raise MissingAmountColumnError(
+            "Select the column containing the transaction amount."
         )
-        return None
 
-    if name_column == amount_column:
-        messagebox.showwarning(
-            title="Invalid Column Selection",
-            message="Name and amount columns must be different.",
+    if clean_name_column == clean_amount_column:
+        raise SameColumnSelectionError(
+            "Name and amount columns must be different."
         )
-        return None
 
-    return name_column, amount_column
+    if clean_name_column not in available_headers:
+        raise ColumnNotFoundError(
+            f'The column "{clean_name_column}" is not available.'
+        )
+
+    if clean_amount_column not in available_headers:
+        raise ColumnNotFoundError(
+            f'The column "{clean_amount_column}" is not available.'
+        )
+
+    return clean_name_column, clean_amount_column
