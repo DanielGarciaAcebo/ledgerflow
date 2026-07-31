@@ -1,12 +1,15 @@
 from pathlib import Path
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 from controllers.columns import (
     configure_column_selectors,
     get_selected_columns,
 )
 from controllers.groups import (
+    GroupAlreadyExistsError,
+    GroupNotFoundError,
+    InvalidGroupNameError,
     create_group,
     delete_group,
     load_groups,
@@ -474,16 +477,74 @@ class LedgerFlowApp(tk.Tk):
         )
 
     def _create_group(self) -> None:
-        create_group(
-            self.new_group_var,
-            self.groups_listbox,
-            self.groups,
+        try:
+            created_group = create_group(
+                self.new_group_var.get(),
+                self.groups,
+            )
+        except InvalidGroupNameError as error:
+            messagebox.showwarning(
+                title="Invalid Group",
+                message=str(error),
+                parent=self,
+            )
+            return
+        except GroupAlreadyExistsError as error:
+            messagebox.showwarning(
+                title="Group Already Exists",
+                message=str(error),
+                parent=self,
+            )
+            return
+
+        self.groups_listbox.insert(
+            tk.END,
+            created_group,
         )
 
+        self.new_group_var.set("")
+
     def _delete_group(self) -> None:
-        delete_group(
-            self.groups_listbox,
-            self.groups,
+        selected_indices = self.groups_listbox.curselection()
+
+        if not selected_indices:
+            messagebox.showwarning(
+                title="No Group Selected",
+                message="Select a group to delete.",
+                parent=self,
+            )
+            return
+
+        selected_index = selected_indices[0]
+
+        group_name = str(
+            self.groups_listbox.get(selected_index)
+        )
+
+        confirmed = messagebox.askyesno(
+            title="Delete Group",
+            message=f'Delete the group "{group_name}"?',
+            parent=self,
+        )
+
+        if not confirmed:
+            return
+
+        try:
+            delete_group(
+                group_name,
+                self.groups,
+            )
+        except GroupNotFoundError as error:
+            messagebox.showerror(
+                title="Group Not Found",
+                message=str(error),
+                parent=self,
+            )
+            return
+
+        self.groups_listbox.delete(
+            selected_index,
         )
 
     def _handle_create_group(
