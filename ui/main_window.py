@@ -1,0 +1,499 @@
+from pathlib import Path
+import tkinter as tk
+from tkinter import ttk
+
+from controllers.columns import (
+    configure_column_selectors,
+    get_selected_columns,
+)
+from controllers.groups import (
+    create_group,
+    delete_group,
+    load_groups,
+)
+from controllers.selection import select_excel_file
+from controllers.table import show_excel_data
+from controllers.transactions import build_transactions
+from models.transaction import Transaction
+from services.excel_exporter import export_transactions_to_excel
+from ui.classification_window import open_classification_window
+
+
+APP_TITLE = "LedgerFlow"
+
+
+class LedgerFlowApp(tk.Tk):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.start_row_var = tk.IntVar(value=3)
+        self.name_column_var = tk.StringVar()
+        self.amount_column_var = tk.StringVar()
+        self.new_group_var = tk.StringVar()
+
+        self.loaded_headers: list[str] = []
+        self.loaded_rows: list[list[object]] = []
+        self.transactions: list[Transaction] = []
+        self.groups = load_groups()
+
+        self._app_icon: tk.PhotoImage | None = None
+
+        self._configure_window()
+        self._create_layout()
+        self._bind_events()
+
+    def _configure_window(self) -> None:
+        self.title(APP_TITLE)
+        self.geometry("1050x900")
+        self.minsize(850, 700)
+
+        icon_path = (
+            Path(__file__).resolve().parent.parent
+            / "assets"
+            / "ledgerflow.png"
+        )
+
+        if icon_path.exists():
+            self._app_icon = tk.PhotoImage(
+                file=icon_path,
+            )
+
+            self.iconphoto(
+                True,
+                self._app_icon,
+            )
+
+    def _create_layout(self) -> None:
+        self.container = ttk.Frame(
+            self,
+            padding=30,
+        )
+        self.container.pack(
+            fill="both",
+            expand=True,
+        )
+
+        self._create_header()
+        self._create_excel_options()
+        self._create_column_selection()
+        self._create_excel_table()
+        self._create_group_creation()
+        self._create_groups_section()
+
+    def _create_header(self) -> None:
+        title_label = ttk.Label(
+            self.container,
+            text=APP_TITLE,
+            font=("Sans", 22, "bold"),
+        )
+        title_label.pack(
+            pady=(0, 8),
+        )
+
+        description_label = ttk.Label(
+            self.container,
+            text="Financial Excel Organizer",
+        )
+        description_label.pack(
+            pady=(0, 25),
+        )
+
+    def _create_excel_options(self) -> None:
+        excel_options_frame = ttk.LabelFrame(
+            self.container,
+            text="Excel File",
+            padding=15,
+        )
+        excel_options_frame.pack(
+            fill="x",
+            pady=(0, 15),
+        )
+
+        row_label = ttk.Label(
+            excel_options_frame,
+            text="Header row:",
+        )
+        row_label.pack(
+            side="left",
+            padx=(0, 10),
+        )
+
+        row_selector = ttk.Spinbox(
+            excel_options_frame,
+            from_=0,
+            to=10000,
+            width=8,
+            textvariable=self.start_row_var,
+        )
+        row_selector.pack(
+            side="left",
+            padx=(0, 15),
+        )
+
+        select_button = ttk.Button(
+            excel_options_frame,
+            text="Select Excel File",
+            command=self._load_selected_excel,
+        )
+        select_button.pack(
+            side="left",
+        )
+
+        self.status_label = ttk.Label(
+            excel_options_frame,
+            text="Ready",
+        )
+        self.status_label.pack(
+            side="right",
+            padx=(15, 0),
+        )
+
+    def _create_column_selection(self) -> None:
+        column_selection_frame = ttk.LabelFrame(
+            self.container,
+            text="Column Selection",
+            padding=15,
+        )
+        column_selection_frame.pack(
+            fill="x",
+            pady=(0, 15),
+        )
+
+        column_selection_frame.columnconfigure(
+            1,
+            weight=1,
+        )
+
+        name_column_label = ttk.Label(
+            column_selection_frame,
+            text="Name column:",
+        )
+        name_column_label.grid(
+            row=0,
+            column=0,
+            sticky="w",
+            padx=(0, 10),
+            pady=(0, 10),
+        )
+
+        self.name_column_selector = ttk.Combobox(
+            column_selection_frame,
+            textvariable=self.name_column_var,
+            state="disabled",
+            width=30,
+        )
+        self.name_column_selector.grid(
+            row=0,
+            column=1,
+            sticky="ew",
+            pady=(0, 10),
+        )
+
+        amount_column_label = ttk.Label(
+            column_selection_frame,
+            text="Amount column:",
+        )
+        amount_column_label.grid(
+            row=1,
+            column=0,
+            sticky="w",
+            padx=(0, 10),
+        )
+
+        self.amount_column_selector = ttk.Combobox(
+            column_selection_frame,
+            textvariable=self.amount_column_var,
+            state="disabled",
+            width=30,
+        )
+        self.amount_column_selector.grid(
+            row=1,
+            column=1,
+            sticky="ew",
+        )
+
+        actions_frame = ttk.Frame(
+            column_selection_frame,
+        )
+        actions_frame.grid(
+            row=2,
+            column=0,
+            columnspan=2,
+            pady=(15, 0),
+        )
+
+        self.prepare_button = ttk.Button(
+            actions_frame,
+            text="Start Classification",
+            command=self._prepare_transactions,
+            state="disabled",
+        )
+        self.prepare_button.pack(
+            side="left",
+            padx=(0, 5),
+        )
+
+        self.export_button = ttk.Button(
+            actions_frame,
+            text="Export Excel",
+            command=self._export_excel,
+            state="disabled",
+        )
+        self.export_button.pack(
+            side="left",
+            padx=(5, 0),
+        )
+
+    def _create_excel_table(self) -> None:
+        excel_frame = ttk.LabelFrame(
+            self.container,
+            text="Excel Data",
+            padding=10,
+        )
+        excel_frame.pack(
+            fill="both",
+            expand=True,
+            pady=(0, 15),
+        )
+
+        table_container = ttk.Frame(
+            excel_frame,
+        )
+        table_container.pack(
+            fill="both",
+            expand=True,
+        )
+
+        table_container.columnconfigure(
+            0,
+            weight=1,
+        )
+        table_container.rowconfigure(
+            0,
+            weight=1,
+        )
+
+        self.excel_tree = ttk.Treeview(
+            table_container,
+            show="headings",
+            height=12,
+        )
+
+        vertical_scrollbar = ttk.Scrollbar(
+            table_container,
+            orient="vertical",
+            command=self.excel_tree.yview,
+        )
+
+        horizontal_scrollbar = ttk.Scrollbar(
+            table_container,
+            orient="horizontal",
+            command=self.excel_tree.xview,
+        )
+
+        self.excel_tree.configure(
+            yscrollcommand=vertical_scrollbar.set,
+            xscrollcommand=horizontal_scrollbar.set,
+        )
+
+        self.excel_tree.grid(
+            row=0,
+            column=0,
+            sticky="nsew",
+        )
+
+        vertical_scrollbar.grid(
+            row=0,
+            column=1,
+            sticky="ns",
+        )
+
+        horizontal_scrollbar.grid(
+            row=1,
+            column=0,
+            sticky="ew",
+        )
+
+    def _create_group_creation(self) -> None:
+        group_creation_frame = ttk.LabelFrame(
+            self.container,
+            text="Create Group",
+            padding=15,
+        )
+        group_creation_frame.pack(
+            fill="x",
+            pady=(0, 15),
+        )
+
+        self.new_group_entry = ttk.Entry(
+            group_creation_frame,
+            textvariable=self.new_group_var,
+        )
+        self.new_group_entry.pack(
+            side="left",
+            fill="x",
+            expand=True,
+            padx=(0, 10),
+        )
+
+        create_group_button = ttk.Button(
+            group_creation_frame,
+            text="Create Group",
+            command=self._create_group,
+        )
+        create_group_button.pack(
+            side="left",
+        )
+
+    def _create_groups_section(self) -> None:
+        groups_frame = ttk.LabelFrame(
+            self.container,
+            text="Available Groups",
+            padding=15,
+        )
+        groups_frame.pack(
+            fill="both",
+            pady=(0, 10),
+        )
+
+        self.groups_listbox = tk.Listbox(
+            groups_frame,
+            height=8,
+            exportselection=False,
+        )
+        self.groups_listbox.pack(
+            fill="both",
+            expand=True,
+        )
+
+        for group_name in self.groups:
+            self.groups_listbox.insert(
+                tk.END,
+                group_name,
+            )
+
+        delete_group_button = ttk.Button(
+            groups_frame,
+            text="Delete Selected Group",
+            command=self._delete_group,
+        )
+        delete_group_button.pack(
+            pady=(10, 0),
+        )
+
+    def _bind_events(self) -> None:
+        self.new_group_entry.bind(
+            "<Return>",
+            self._handle_create_group,
+        )
+
+        self.groups_listbox.bind(
+            "<Delete>",
+            self._handle_delete_group,
+        )
+
+    def _load_selected_excel(self) -> None:
+        header_row = self.start_row_var.get() + 1
+
+        result = select_excel_file(
+            self.status_label,
+            header_row,
+        )
+
+        if result is None:
+            return
+
+        headers, rows = result
+
+        self.loaded_headers = headers
+        self.loaded_rows = rows
+        self.transactions = []
+
+        show_excel_data(
+            self.excel_tree,
+            headers,
+            rows,
+        )
+
+        configure_column_selectors(
+            headers,
+            self.name_column_selector,
+            self.amount_column_selector,
+            self.name_column_var,
+            self.amount_column_var,
+        )
+
+        self.prepare_button.config(
+            state="normal",
+        )
+
+        self.export_button.config(
+            state="disabled",
+        )
+
+    def _prepare_transactions(self) -> None:
+        selected_columns = get_selected_columns(
+            self.name_column_var,
+            self.amount_column_var,
+        )
+
+        if selected_columns is None:
+            return
+
+        name_column, amount_column = selected_columns
+
+        self.transactions = build_transactions(
+            self.loaded_headers,
+            self.loaded_rows,
+            name_column,
+            amount_column,
+        )
+
+        self.status_label.config(
+            text=(
+                f"{len(self.transactions)} "
+                "transactions ready"
+            ),
+        )
+
+        open_classification_window(
+            self,
+            self.transactions,
+            self.groups,
+        )
+
+        self.export_button.config(
+            state="normal",
+        )
+
+    def _export_excel(self) -> None:
+        export_transactions_to_excel(
+            self,
+            self.transactions,
+            self.groups,
+        )
+
+    def _create_group(self) -> None:
+        create_group(
+            self.new_group_var,
+            self.groups_listbox,
+            self.groups,
+        )
+
+    def _delete_group(self) -> None:
+        delete_group(
+            self.groups_listbox,
+            self.groups,
+        )
+
+    def _handle_create_group(
+        self,
+        _event: tk.Event,
+    ) -> None:
+        self._create_group()
+
+    def _handle_delete_group(
+        self,
+        _event: tk.Event,
+    ) -> None:
+        self._delete_group()
