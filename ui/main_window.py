@@ -1,6 +1,6 @@
 from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from controllers.columns import (
     ColumnNotFoundError,
@@ -9,7 +9,6 @@ from controllers.columns import (
     SameColumnSelectionError,
     validate_column_selection,
 )
-
 from controllers.groups import (
     GroupAlreadyExistsError,
     GroupNotFoundError,
@@ -18,11 +17,17 @@ from controllers.groups import (
     delete_group,
     load_groups,
 )
-from controllers.selection import select_excel_file
-from controllers.table import show_excel_data
+from ui.components.excel_table import ExcelTable
 from controllers.transactions import build_transactions
 from models.transaction import Transaction
 from services.excel_exporter import export_transactions_to_excel
+from services.excel_reader import (
+    EmptyExcelFileError,
+    ExcelReadError,
+    HeaderRowNotFoundError,
+    InvalidHeaderRowError,
+    read_excel_file,
+)
 from ui.classification_window import open_classification_window
 
 
@@ -49,22 +54,9 @@ class LedgerFlowApp(tk.Tk):
         self._create_layout()
         self._bind_events()
 
-    def _configure_column_selectors(
-        self,
-        headers: list[str],
-    ) -> None:
-        self.name_column_selector["values"] = headers
-        self.amount_column_selector["values"] = headers
-
-        self.name_column_selector.config(
-            state="readonly",
-        )
-        self.amount_column_selector.config(
-            state="readonly",
-        )
-
-        self.name_column_var.set("")
-        self.amount_column_var.set("")
+    # =========================================================
+    # WINDOW CONFIGURATION
+    # =========================================================
 
     def _configure_window(self) -> None:
         self.title(APP_TITLE)
@@ -87,6 +79,10 @@ class LedgerFlowApp(tk.Tk):
                 self._app_icon,
             )
 
+    # =========================================================
+    # MAIN LAYOUT
+    # =========================================================
+
     def _create_layout(self) -> None:
         self.container = ttk.Frame(
             self,
@@ -103,6 +99,10 @@ class LedgerFlowApp(tk.Tk):
         self._create_excel_table()
         self._create_group_creation()
         self._create_groups_section()
+
+    # =========================================================
+    # HEADER
+    # =========================================================
 
     def _create_header(self) -> None:
         title_label = ttk.Label(
@@ -121,6 +121,10 @@ class LedgerFlowApp(tk.Tk):
         description_label.pack(
             pady=(0, 25),
         )
+
+    # =========================================================
+    # EXCEL OPTIONS
+    # =========================================================
 
     def _create_excel_options(self) -> None:
         excel_options_frame = ttk.LabelFrame(
@@ -171,6 +175,10 @@ class LedgerFlowApp(tk.Tk):
             side="right",
             padx=(15, 0),
         )
+
+    # =========================================================
+    # COLUMN SELECTION
+    # =========================================================
 
     def _create_column_selection(self) -> None:
         column_selection_frame = ttk.LabelFrame(
@@ -268,75 +276,42 @@ class LedgerFlowApp(tk.Tk):
             padx=(5, 0),
         )
 
-    def _create_excel_table(self) -> None:
-        excel_frame = ttk.LabelFrame(
-            self.container,
-            text="Excel Data",
-            padding=10,
+    def _configure_column_selectors(
+        self,
+        headers: list[str],
+    ) -> None:
+        self.name_column_selector["values"] = headers
+        self.amount_column_selector["values"] = headers
+
+        self.name_column_selector.config(
+            state="readonly",
         )
-        excel_frame.pack(
+
+        self.amount_column_selector.config(
+            state="readonly",
+        )
+
+        self.name_column_var.set("")
+        self.amount_column_var.set("")
+
+    # =========================================================
+    # EXCEL TABLE
+    # =========================================================
+
+    def _create_excel_table(self) -> None:
+        self.excel_table = ExcelTable(
+            self.container,
+        )
+
+        self.excel_table.pack(
             fill="both",
             expand=True,
             pady=(0, 15),
         )
 
-        table_container = ttk.Frame(
-            excel_frame,
-        )
-        table_container.pack(
-            fill="both",
-            expand=True,
-        )
-
-        table_container.columnconfigure(
-            0,
-            weight=1,
-        )
-        table_container.rowconfigure(
-            0,
-            weight=1,
-        )
-
-        self.excel_tree = ttk.Treeview(
-            table_container,
-            show="headings",
-            height=12,
-        )
-
-        vertical_scrollbar = ttk.Scrollbar(
-            table_container,
-            orient="vertical",
-            command=self.excel_tree.yview,
-        )
-
-        horizontal_scrollbar = ttk.Scrollbar(
-            table_container,
-            orient="horizontal",
-            command=self.excel_tree.xview,
-        )
-
-        self.excel_tree.configure(
-            yscrollcommand=vertical_scrollbar.set,
-            xscrollcommand=horizontal_scrollbar.set,
-        )
-
-        self.excel_tree.grid(
-            row=0,
-            column=0,
-            sticky="nsew",
-        )
-
-        vertical_scrollbar.grid(
-            row=0,
-            column=1,
-            sticky="ns",
-        )
-
-        horizontal_scrollbar.grid(
-            row=1,
-            column=0,
-            sticky="ew",
-        )
+    # =========================================================
+    # GROUP CREATION
+    # =========================================================
 
     def _create_group_creation(self) -> None:
         group_creation_frame = ttk.LabelFrame(
@@ -368,6 +343,10 @@ class LedgerFlowApp(tk.Tk):
         create_group_button.pack(
             side="left",
         )
+
+    # =========================================================
+    # AVAILABLE GROUPS
+    # =========================================================
 
     def _create_groups_section(self) -> None:
         groups_frame = ttk.LabelFrame(
@@ -405,6 +384,10 @@ class LedgerFlowApp(tk.Tk):
             pady=(10, 0),
         )
 
+    # =========================================================
+    # EVENTS
+    # =========================================================
+
     def _bind_events(self) -> None:
         self.new_group_entry.bind(
             "<Return>",
@@ -416,31 +399,86 @@ class LedgerFlowApp(tk.Tk):
             self._handle_delete_group,
         )
 
-    def _load_selected_excel(self) -> None:
-        header_row = self.start_row_var.get() + 1
+    def _handle_create_group(
+        self,
+        _event: tk.Event,
+    ) -> None:
+        self._create_group()
 
-        result = select_excel_file(
-            self.status_label,
-            header_row,
+    def _handle_delete_group(
+        self,
+        _event: tk.Event,
+    ) -> None:
+        self._delete_group()
+
+    # =========================================================
+    # EXCEL LOADING
+    # =========================================================
+
+    def _load_selected_excel(self) -> None:
+        file_path = filedialog.askopenfilename(
+            parent=self,
+            title="Select Excel File",
+            initialdir=str(Path.home()),
+            filetypes=[
+                ("Excel files", "*.xlsx"),
+                ("All files", "*.*"),
+            ],
         )
 
-        if result is None:
+        if not file_path:
+            self.status_label.config(
+                text="No file selected",
+            )
             return
 
-        headers, rows = result
+        header_row = self.start_row_var.get() + 1
 
-        self.loaded_headers = headers
-        self.loaded_rows = rows
+        try:
+            excel_data = read_excel_file(
+                file_path,
+                header_row,
+            )
+        except InvalidHeaderRowError as error:
+            self._show_excel_error(
+                "Invalid Header Row",
+                error,
+            )
+            return
+        except HeaderRowNotFoundError as error:
+            self._show_excel_error(
+                "Header Row Not Found",
+                error,
+            )
+            return
+        except EmptyExcelFileError as error:
+            self._show_excel_error(
+                "Empty Excel File",
+                error,
+            )
+            return
+        except ExcelReadError as error:
+            self._show_excel_error(
+                "Excel Error",
+                error,
+            )
+            return
+
+        self.loaded_headers = excel_data.headers
+        self.loaded_rows = excel_data.rows
         self.transactions = []
 
-        show_excel_data(
-            self.excel_tree,
-            headers,
-            rows,
+        self.excel_table.show_data(
+            excel_data.headers,
+            excel_data.rows,
         )
 
         self._configure_column_selectors(
-            headers,
+            excel_data.headers,
+        )
+
+        self.status_label.config(
+            text=f"Selected: {excel_data.file_path.name}",
         )
 
         self.prepare_button.config(
@@ -450,6 +488,25 @@ class LedgerFlowApp(tk.Tk):
         self.export_button.config(
             state="disabled",
         )
+
+    def _show_excel_error(
+        self,
+        title: str,
+        error: Exception,
+    ) -> None:
+        self.status_label.config(
+            text="Could not read the file",
+        )
+
+        messagebox.showerror(
+            title=title,
+            message=str(error),
+            parent=self,
+        )
+
+    # =========================================================
+    # TRANSACTION CLASSIFICATION
+    # =========================================================
 
     def _prepare_transactions(self) -> None:
         try:
@@ -513,12 +570,20 @@ class LedgerFlowApp(tk.Tk):
             state="normal",
         )
 
+    # =========================================================
+    # EXCEL EXPORT
+    # =========================================================
+
     def _export_excel(self) -> None:
         export_transactions_to_excel(
             self,
             self.transactions,
             self.groups,
         )
+
+    # =========================================================
+    # GROUP ACTIONS
+    # =========================================================
 
     def _create_group(self) -> None:
         try:
@@ -590,15 +655,3 @@ class LedgerFlowApp(tk.Tk):
         self.groups_listbox.delete(
             selected_index,
         )
-
-    def _handle_create_group(
-        self,
-        _event: tk.Event,
-    ) -> None:
-        self._create_group()
-
-    def _handle_delete_group(
-        self,
-        _event: tk.Event,
-    ) -> None:
-        self._delete_group()
