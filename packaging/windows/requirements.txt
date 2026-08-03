@@ -1,0 +1,5 @@
+openpyxl==3.1.5
+platformdirs==4.11.0
+pyinstaller==6.21.0
+pyinstaller-hooks-contrib==2026.6
+Pillow>=10,<13
