@@ -6,13 +6,11 @@ The application reads an Excel workbook, lets the user select the transaction na
 
 ## Download
 
-### Linux x86_64
+### Generic Linux ZIP
 
-Download the latest packaged version for Linux:
+Download the packaged Linux version:
 
 [Download LedgerFlow 1.0.0 for Linux](https://github.com/DanielGarciaAcebo/ledgerflow/releases/download/v1.0.0/LedgerFlow-1.0.0-linux-x86_64.zip)
-
-You can also view all published versions on the [LedgerFlow releases page](https://github.com/DanielGarciaAcebo/ledgerflow/releases).
 
 After downloading the ZIP:
 
@@ -24,7 +22,13 @@ bash install.sh
 
 Administrator permissions are not required.
 
-After installation, open your application menu and search for:
+LedgerFlow will be installed for the current user in:
+
+```text
+~/.local/opt/ledgerflow/
+```
+
+After installation, open the application menu and search for:
 
 ```text
 LedgerFlow
@@ -41,6 +45,28 @@ To uninstall it:
 ```bash
 ~/.local/opt/ledgerflow/uninstall.sh
 ```
+
+### Arch Linux package
+
+Arch Linux users can download the native package:
+
+[Download LedgerFlow 1.0.0 for Arch Linux](https://github.com/DanielGarciaAcebo/ledgerflow/releases/download/v1.0.0/ledgerflow-1.0.0-1-any.pkg.tar.zst)
+
+Install it with:
+
+```bash
+sudo pacman -U ledgerflow-1.0.0-1-any.pkg.tar.zst
+```
+
+The package installs LedgerFlow system-wide and lets `pacman` manage the application and its dependencies.
+
+To uninstall it:
+
+```bash
+sudo pacman -Rns ledgerflow
+```
+
+You can view all published versions on the [LedgerFlow releases page](https://github.com/DanielGarciaAcebo/ledgerflow/releases).
 
 ## Status
 
@@ -64,6 +90,7 @@ The current version supports:
 * Installing LedgerFlow as a desktop application on Linux.
 * Displaying LedgerFlow in Linux application menus.
 * Running LedgerFlow through the `ledgerflow` terminal command.
+* Installing LedgerFlow through a native Arch Linux package.
 
 ## How it works
 
@@ -188,6 +215,59 @@ release/LedgerFlow-1.0.0-linux-x86_64.zip
 
 This ZIP can be uploaded to a GitHub release and distributed to other users.
 
+## Building the Arch Linux package
+
+Install the Arch package-building tools:
+
+```bash
+sudo pacman -S --needed base-devel
+```
+
+Give the build scripts execution permission:
+
+```bash
+chmod +x packaging/arch/build_pkg.sh
+chmod +x packaging/arch/ledgerflow
+```
+
+Build version `1.0.0`:
+
+```bash
+./packaging/arch/build_pkg.sh 1.0.0
+```
+
+Do not run this script with `sudo`.
+
+The generated package will be located at:
+
+```text
+release/ledgerflow-1.0.0-1-any.pkg.tar.zst
+```
+
+Inspect the package information:
+
+```bash
+pacman -Qip release/ledgerflow-1.0.0-1-any.pkg.tar.zst
+```
+
+Inspect the files included in the package:
+
+```bash
+pacman -Qlp release/ledgerflow-1.0.0-1-any.pkg.tar.zst
+```
+
+Install the generated package:
+
+```bash
+sudo pacman -U release/ledgerflow-1.0.0-1-any.pkg.tar.zst
+```
+
+Remove it with:
+
+```bash
+sudo pacman -Rns ledgerflow
+```
+
 ## Project structure
 
 ```text
@@ -207,6 +287,10 @@ ledgerflow/
 ├── packaging/
 │   ├── appimage/
 │   ├── arch/
+│   │   ├── PKGBUILD
+│   │   ├── build_pkg.sh
+│   │   ├── ledgerflow
+│   │   └── io.github.DanielGarciaAcebo.LedgerFlow.desktop
 │   └── zip/
 │       ├── build_zip.sh
 │       ├── install.sh
@@ -237,12 +321,17 @@ ledgerflow/
 └── requirements.txt
 ```
 
-The following directories are generated automatically and are not committed:
+The following directories and files are generated automatically and are not committed:
 
 ```text
 build/
 dist/
 release/
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.tar.gz
+packaging/arch/*.pkg.tar.zst
+packaging/arch/.SRCINFO
 ```
 
 ## Application data
@@ -366,8 +455,8 @@ Imported financial files and saved classifications remain on the user's computer
 * Add an interface for editing saved classifications.
 * Improve import validation and error messages.
 * Add support for additional spreadsheet formats.
-* Build a native Arch Linux package.
 * Build an AppImage package.
+* Add Windows builds.
 * Add automated tests.
 * Add continuous integration for release builds.
 
@@ -395,6 +484,12 @@ Build the distributable ZIP:
 
 ```bash
 ./packaging/zip/build_zip.sh 1.0.0
+```
+
+Build the native Arch package:
+
+```bash
+./packaging/arch/build_pkg.sh 1.0.0
 ```
 
 ## License
