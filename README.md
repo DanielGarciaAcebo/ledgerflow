@@ -6,6 +6,32 @@ The application reads an Excel workbook, lets the user select the transaction na
 
 ## Download
 
+### AppImage
+
+Download the portable AppImage:
+
+[Download LedgerFlow 1.0.0 AppImage](https://github.com/DanielGarciaAcebo/ledgerflow/releases/download/v1.0.0/LedgerFlow-1.0.0-x86_64.AppImage)
+
+Give the file execution permission:
+
+```bash
+chmod +x LedgerFlow-1.0.0-x86_64.AppImage
+```
+
+Run it:
+
+```bash
+./LedgerFlow-1.0.0-x86_64.AppImage
+```
+
+If FUSE is unavailable:
+
+```bash
+./LedgerFlow-1.0.0-x86_64.AppImage --appimage-extract-and-run
+```
+
+The AppImage does not require installation or administrator permissions.
+
 ### Generic Linux ZIP
 
 Download the packaged Linux version:
@@ -91,6 +117,7 @@ The current version supports:
 * Displaying LedgerFlow in Linux application menus.
 * Running LedgerFlow through the `ledgerflow` terminal command.
 * Installing LedgerFlow through a native Arch Linux package.
+* Running LedgerFlow as a portable AppImage.
 
 ## How it works
 
@@ -124,11 +151,11 @@ Example:
 
 ### Requirements
 
-* Linux
-* Python 3
-* Tkinter
-* `openpyxl`
-* `platformdirs`
+* Linux.
+* Python 3.
+* Tkinter.
+* `openpyxl`.
+* `platformdirs`.
 
 Install the system dependencies on Arch Linux:
 
@@ -213,17 +240,15 @@ The generated package will be located at:
 release/LedgerFlow-1.0.0-linux-x86_64.zip
 ```
 
-This ZIP can be uploaded to a GitHub release and distributed to other users.
-
 ## Building the Arch Linux package
 
-Install the Arch package-building tools:
+Install the package-building tools:
 
 ```bash
 sudo pacman -S --needed base-devel
 ```
 
-Give the build scripts execution permission:
+Give the scripts execution permission:
 
 ```bash
 chmod +x packaging/arch/build_pkg.sh
@@ -236,7 +261,7 @@ Build version `1.0.0`:
 ./packaging/arch/build_pkg.sh 1.0.0
 ```
 
-Do not run this script with `sudo`.
+Do not run the build script with `sudo`.
 
 The generated package will be located at:
 
@@ -244,28 +269,53 @@ The generated package will be located at:
 release/ledgerflow-1.0.0-1-any.pkg.tar.zst
 ```
 
-Inspect the package information:
+Inspect the package:
 
 ```bash
 pacman -Qip release/ledgerflow-1.0.0-1-any.pkg.tar.zst
-```
-
-Inspect the files included in the package:
-
-```bash
 pacman -Qlp release/ledgerflow-1.0.0-1-any.pkg.tar.zst
 ```
 
-Install the generated package:
+Install it:
 
 ```bash
 sudo pacman -U release/ledgerflow-1.0.0-1-any.pkg.tar.zst
 ```
 
-Remove it with:
+## Building the AppImage
+
+Give the AppImage scripts execution permission:
 
 ```bash
-sudo pacman -Rns ledgerflow
+chmod +x packaging/appimage/AppRun
+chmod +x packaging/appimage/build_appimage.sh
+```
+
+Build version `1.0.0`:
+
+```bash
+./packaging/appimage/build_appimage.sh 1.0.0
+```
+
+Do not run the build script with `sudo`.
+
+The generated AppImage will be located at:
+
+```text
+release/LedgerFlow-1.0.0-x86_64.AppImage
+```
+
+Run it:
+
+```bash
+./release/LedgerFlow-1.0.0-x86_64.AppImage
+```
+
+If FUSE is unavailable:
+
+```bash
+./release/LedgerFlow-1.0.0-x86_64.AppImage \
+    --appimage-extract-and-run
 ```
 
 ## Project structure
@@ -286,6 +336,9 @@ ledgerflow/
 │   └── transaction.py
 ├── packaging/
 │   ├── appimage/
+│   │   ├── AppRun
+│   │   ├── build_appimage.sh
+│   │   └── io.github.DanielGarciaAcebo.LedgerFlow.desktop
 │   ├── arch/
 │   │   ├── PKGBUILD
 │   │   ├── build_pkg.sh
@@ -332,6 +385,7 @@ packaging/arch/pkg/
 packaging/arch/*.tar.gz
 packaging/arch/*.pkg.tar.zst
 packaging/arch/.SRCINFO
+*.AppImage
 ```
 
 ## Application data
@@ -455,10 +509,10 @@ Imported financial files and saved classifications remain on the user's computer
 * Add an interface for editing saved classifications.
 * Improve import validation and error messages.
 * Add support for additional spreadsheet formats.
-* Build an AppImage package.
 * Add Windows builds.
 * Add automated tests.
 * Add continuous integration for release builds.
+* Build broadly compatible Linux packages in an older Linux environment.
 
 ## Development notes
 
@@ -490,6 +544,12 @@ Build the native Arch package:
 
 ```bash
 ./packaging/arch/build_pkg.sh 1.0.0
+```
+
+Build the AppImage:
+
+```bash
+./packaging/appimage/build_appimage.sh 1.0.0
 ```
 
 ## License
