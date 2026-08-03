@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=LedgerFlow
+GenericName=Financial Excel Organizer
+Comment=Organize and classify financial Excel transactions
+Exec=LedgerFlow
+Icon=ledgerflow
+Terminal=false
+StartupNotify=true
+Categories=Office;Finance;Utility;
+Keywords=finance;excel;spreadsheet;ledger;transactions;
