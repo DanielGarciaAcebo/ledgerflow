@@ -6,6 +6,29 @@ The application reads an Excel workbook, lets the user select the transaction na
 
 ## Download
 
+### Windows portable
+
+Download the portable Windows build:
+
+[Download LedgerFlow 1.0.0 for Windows](https://github.com/DanielGarciaAcebo/ledgerflow/releases/download/v1.0.0/LedgerFlow-1.0.0-windows-x86_64.zip)
+
+This version does not require installation.
+
+1. Download the ZIP.
+2. Extract the complete archive.
+3. Open the extracted directory.
+4. Double-click `LedgerFlow.exe`.
+
+Do not move `LedgerFlow.exe` outside the extracted directory. The `_internal` directory contains required application files.
+
+LedgerFlow stores its application data locally, normally in:
+
+```text
+%LOCALAPPDATA%\LedgerFlow
+```
+
+To remove the portable version, delete the extracted directory. Personal application data is not deleted automatically.
+
 ### AppImage
 
 Download the portable AppImage:
@@ -96,28 +119,27 @@ You can view all published versions on the [LedgerFlow releases page](https://gi
 
 ## Status
 
-LedgerFlow is currently under active development.
+LedgerFlow 1.0.0 supports:
 
-The current version supports:
-
-* Loading `.xlsx` files.
-* Selecting the Excel header row.
-* Selecting the transaction name column.
-* Selecting the transaction amount column.
-* Displaying imported Excel data.
-* Creating and deleting custom groups.
-* Classifying transactions into one or more groups.
-* Assigning normal or inverted signs independently for each group.
-* Saving previous classifications.
-* Reusing saved classifications in future imports.
-* Applying automatic classification rules.
-* Normalizing transaction names such as Bizum operations.
-* Exporting an organized Excel file.
-* Installing LedgerFlow as a desktop application on Linux.
-* Displaying LedgerFlow in Linux application menus.
-* Running LedgerFlow through the `ledgerflow` terminal command.
-* Installing LedgerFlow through a native Arch Linux package.
-* Running LedgerFlow as a portable AppImage.
+- Loading `.xlsx` files.
+- Selecting the Excel header row.
+- Selecting the transaction name column.
+- Selecting the transaction amount column.
+- Displaying imported Excel data.
+- Creating and deleting custom groups.
+- Classifying transactions into one or more groups.
+- Assigning normal or inverted signs independently for each group.
+- Saving previous classifications.
+- Reusing saved classifications in future imports.
+- Applying automatic classification rules.
+- Normalizing transaction names such as Bizum operations.
+- Exporting an organized Excel file.
+- Installing LedgerFlow as a desktop application on Linux.
+- Displaying LedgerFlow in Linux application menus.
+- Running LedgerFlow through the `ledgerflow` terminal command.
+- Installing LedgerFlow through a native Arch Linux package.
+- Running LedgerFlow as a portable AppImage.
+- Running LedgerFlow as a portable Windows application.
 
 ## How it works
 
@@ -135,27 +157,27 @@ The basic workflow is:
 
 The exported file contains:
 
-* A fixed `Name` column.
-* One column for each configured group.
-* The transaction amount in every assigned group column.
-* The opposite amount sign when `Invert` is enabled for that group.
+- A fixed `Name` column.
+- One column for each configured group.
+- The transaction amount in every assigned group column.
+- The opposite amount sign when `Invert` is enabled for that group.
 
 Example:
 
-| Name        |   Food |  Income | Internal Transfer |
-| ----------- | -----: | ------: | ----------------: |
-| Supermarket | -42.50 |         |                   |
-| Salary      |        | 1500.00 |          -1500.00 |
+| Name | Food | Income | Internal Transfer |
+| --- | ---: | ---: | ---: |
+| Supermarket | -42.50 | | |
+| Salary | | 1500.00 | -1500.00 |
 
 ## Installing from source
 
 ### Requirements
 
-* Linux.
-* Python 3.
-* Tkinter.
-* `openpyxl`.
-* `platformdirs`.
+- Linux.
+- Python 3.
+- Tkinter.
+- `openpyxl`.
+- `platformdirs`.
 
 Install the system dependencies on Arch Linux:
 
@@ -191,7 +213,7 @@ python main.py
 
 ## Local development installation
 
-LedgerFlow can be built and installed locally for the current user:
+LedgerFlow can be built and installed locally for the current Linux user:
 
 ```bash
 chmod +x scripts/install_arch.sh
@@ -318,10 +340,41 @@ If FUSE is unavailable:
     --appimage-extract-and-run
 ```
 
+## Building the Windows portable package
+
+The Windows package is built on a Windows runner through GitHub Actions.
+
+The workflow is located at:
+
+```text
+.github/workflows/build-windows.yml
+```
+
+To create the package:
+
+1. Push the Windows packaging files and workflow to GitHub.
+2. Open the repository's **Actions** tab.
+3. Select **Build Windows portable**.
+4. Select **Run workflow**.
+5. Enter version `1.0.0`.
+6. Open the completed workflow execution.
+7. Download the generated artifact.
+
+The generated file is:
+
+```text
+LedgerFlow-1.0.0-windows-x86_64.zip
+```
+
+The archive contains `LedgerFlow.exe`, its `_internal` dependencies, and a portable usage guide.
+
 ## Project structure
 
 ```text
 ledgerflow/
+├── .github/
+│   └── workflows/
+│       └── build-windows.yml
 ├── assets/
 │   ├── ledgerflow.png
 │   └── ledgerflow.svg
@@ -344,6 +397,11 @@ ledgerflow/
 │   │   ├── build_pkg.sh
 │   │   ├── ledgerflow
 │   │   └── io.github.DanielGarciaAcebo.LedgerFlow.desktop
+│   ├── windows/
+│   │   ├── requirements.txt
+│   │   ├── create_icon.py
+│   │   ├── LedgerFlow.windows.spec
+│   │   └── build_windows.ps1
 │   └── zip/
 │       ├── build_zip.sh
 │       ├── install.sh
@@ -396,6 +454,12 @@ On Linux, this will normally be:
 
 ```text
 ~/.local/share/LedgerFlow/
+```
+
+On Windows, this will normally be:
+
+```text
+%LOCALAPPDATA%\LedgerFlow
 ```
 
 The main application data files are:
@@ -495,28 +559,16 @@ LedgerFlow runs entirely on the local computer.
 
 It does not require:
 
-* A server.
-* An external database.
-* An internet connection.
-* A cloud account.
+- A server.
+- An external database.
+- An internet connection.
+- A cloud account.
 
 Imported financial files and saved classifications remain on the user's computer.
 
-## Planned improvements
-
-* Improve the final Excel formatting.
-* Add a classification summary screen.
-* Add an interface for editing saved classifications.
-* Improve import validation and error messages.
-* Add support for additional spreadsheet formats.
-* Add Windows builds.
-* Add automated tests.
-* Add continuous integration for release builds.
-* Build broadly compatible Linux packages in an older Linux environment.
-
 ## Development notes
 
-Activate the virtual environment before working on the project:
+Activate the virtual environment before working on the Linux version:
 
 ```bash
 source .venv/bin/activate
@@ -528,13 +580,13 @@ Exit the environment with:
 deactivate
 ```
 
-Build and reinstall the development version:
+Build and reinstall the local development version:
 
 ```bash
 ./scripts/install_arch.sh
 ```
 
-Build the distributable ZIP:
+Build the distributable Linux ZIP:
 
 ```bash
 ./packaging/zip/build_zip.sh 1.0.0
@@ -551,6 +603,8 @@ Build the AppImage:
 ```bash
 ./packaging/appimage/build_appimage.sh 1.0.0
 ```
+
+The Windows package is generated through the **Build Windows portable** GitHub Actions workflow.
 
 ## License
 
