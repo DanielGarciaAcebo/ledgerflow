@@ -1,0 +1,60 @@
+pkgname=ledgerflow
+pkgver=1.0.0
+pkgrel=1
+
+pkgdesc="Local desktop application for organizing financial Excel transactions"
+
+arch=('any')
+
+url="https://github.com/DanielGarciaAcebo/ledgerflow"
+
+depends=(
+    'python'
+    'tk'
+    'python-openpyxl'
+    'python-platformdirs'
+)
+
+source=(
+    "$pkgname-$pkgver.tar.gz"
+    'ledgerflow'
+    'io.github.DanielGarciaAcebo.LedgerFlow.desktop'
+)
+
+sha256sums=(
+    'SKIP'
+    'SKIP'
+    'SKIP'
+)
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+
+    install -d \
+        "$pkgdir/usr/lib/$pkgname"
+
+    cp -a \
+        main.py \
+        controllers \
+        models \
+        services \
+        ui \
+        assets \
+        "$pkgdir/usr/lib/$pkgname/"
+
+    install -Dm755 \
+        "$srcdir/ledgerflow" \
+        "$pkgdir/usr/bin/ledgerflow"
+
+    install -Dm644 \
+        "$srcdir/io.github.DanielGarciaAcebo.LedgerFlow.desktop" \
+        "$pkgdir/usr/share/applications/io.github.DanielGarciaAcebo.LedgerFlow.desktop"
+
+    install -Dm644 \
+        "assets/ledgerflow.svg" \
+        "$pkgdir/usr/share/icons/hicolor/scalable/apps/ledgerflow.svg"
+
+    install -Dm644 \
+        "README.md" \
+        "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

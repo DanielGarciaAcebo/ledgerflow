@@ -1,0 +1,5 @@
+#!/bin/sh
+
+exec /usr/bin/python \
+    /usr/lib/ledgerflow/main.py \
+    "$@"

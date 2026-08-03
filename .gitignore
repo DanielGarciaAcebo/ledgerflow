@@ -67,3 +67,11 @@ release/
 
 .DS_Store
 Thumbs.db
+
+
+# Arch package build output
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/*.tar.gz
+packaging/arch/*.pkg.tar.zst
+packaging/arch/.SRCINFO
